@@ -1,23 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Threading.Tasks;
-using SyteLine.Models;
+using InforCloudSuite.DataDumper.Models;
 
-
-namespace SyteLine;
+namespace InforCloudSuite.DataDumper.Services;
 
 public class SyteLineService
 {
     public static HttpClient Client = new HttpClient();
-    public static Credentials credentials;
+    public static Credentials? credentials;
 
-    public static string Config;
+    public static string Config = "";
 
     public static void LoadCredentials(Credentials credentials)
     {
@@ -26,6 +19,7 @@ public class SyteLineService
     
     public static async Task GetAccessToken()
     {
+        if (credentials == null) throw new Exception("Credentials not loaded");
         using HttpClient client = new HttpClient();
         Dictionary<string, string> requestData = new Dictionary<string, string>
         {
@@ -94,7 +88,7 @@ public class SyteLineService
             writer.WriteLine();
         }
 
-        string bookmarkResult = response.GetProperty("Bookmark").GetString();
+        string? bookmarkResult = response.GetProperty("Bookmark").GetString();
         bool moreRowsExist = response.GetProperty("MoreRowsExist").GetBoolean();
 
         Console.WriteLine($"Total Records Fetched: {recordsFetched + previousRecordsFetched}");
@@ -103,7 +97,7 @@ public class SyteLineService
         {
             Console.WriteLine("More rows exist");
             Console.WriteLine($"Bookmark: {bookmarkResult}");
-            await LoadCollection(ido, fs, writer, orderBy, bookmarkResult, recordsFetched + previousRecordsFetched);
+            await LoadCollection(ido, fs, writer, orderBy, bookmarkResult ?? "", recordsFetched + previousRecordsFetched);
         }
     }
 }
